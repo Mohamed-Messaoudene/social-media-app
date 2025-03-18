@@ -1,0 +1,26 @@
+# Node.js dependencies
+server/node_modules/
+
+# React dependencies
+client/node_modules/
+client/.next/
+client/.parcel-cache/
+client/.cache/
+
+# Logs
+server/logs/
+client/logs/
+*.log
+
+# Environment files
+server/.env
+client/.env
+.env.local
+
+# Build files
+server/dist/
+client/build/
+client/.vite/
+
+# Misc
+.DS_Store

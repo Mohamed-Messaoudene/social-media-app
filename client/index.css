@@ -1,0 +1,12 @@
+*{
+    padding: 0;
+    margin: 0;
+    font-family: "Lora", serif;
+    box-sizing: border-box;
+}
+
+.boxShadow{
+    box-shadow: -1px 4px 23px -6px rgba(131, 131, 133, 0.88);
+-webkit-box-shadow: -1px 4px 23px -6px rgba(131, 131, 133, 0.88);
+-moz-box-shadow: -1px 4px 23px -6px rgba(131, 131, 133, 0.88);
+}
