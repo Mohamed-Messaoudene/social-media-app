@@ -21,7 +21,7 @@ sequelize
 
 // Sync the database
 sequelize
-  .sync({})
+  .sync()
   .then(() => {
     console.log("Database & tables created!");
   })

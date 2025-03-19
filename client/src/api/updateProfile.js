@@ -1,6 +1,6 @@
 import { makeRequest } from "../axios";
 
-const handleUpdateProfile = async (userId,data, setSnackBarParams, navigate, handleClose, login) => {
+const handleUpdateProfile = async (userId,data, setSnackBarParams, handleClose, login,setProfileUser) => {
   try {
     const formData = new FormData();
 
@@ -22,7 +22,7 @@ const handleUpdateProfile = async (userId,data, setSnackBarParams, navigate, han
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    console.log("Server response:", response);
+    console.log("update profile response:-------------------------------------", response);
 
     if (response.status === 200) {
       const { message, user } = response.data;
@@ -32,13 +32,12 @@ const handleUpdateProfile = async (userId,data, setSnackBarParams, navigate, han
         open: true,
         color: "success",
       });
-      console.log(user);
       // Update user login info
       login(user);
+      setProfileUser(user);
       // Close the dialog/modal
       handleClose();
       // Navigate to the user's profile page
-      navigate(`/profile/${user.id}`);
     }
   } catch (error) {
     console.error("Error updating profile:", error);

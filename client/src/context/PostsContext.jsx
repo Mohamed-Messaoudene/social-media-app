@@ -7,6 +7,7 @@ export const usePosts = () => {
   return useContext(PostsContext);
 };
 
+// eslint-disable-next-line react/prop-types
 export const PostsProvider = ({ children }) => {
   const [state, dispatch] = useReducer(postsReducer, initialState);
 

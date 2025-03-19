@@ -1,5 +1,4 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import React from "react";
 import UserAvatar from "../UserAvatar";
 import ScrollableBox from "../ScrollableBox";
 

@@ -1,6 +1,6 @@
 import { makeRequest } from "../axios";
 
-const handleLoginSubmit = async (data,login, setSnackBarParams, navigate) => {
+const handleLoginSubmit = async (data,login, setSnackBarParams, navigate,location) => {
   try {
     console.log("i will send a request login")
     const response = await makeRequest.post(
@@ -17,7 +17,7 @@ const handleLoginSubmit = async (data,login, setSnackBarParams, navigate) => {
       console.log(response.data.user)
      
       login(response.data.user);
-      navigate(`/home`);
+      navigate(location.state?.from || "/home", { replace: true });
     }
   } catch (error) {
     console.log(error)

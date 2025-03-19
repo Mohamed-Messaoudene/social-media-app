@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import  { createContext, useContext, useEffect, useState } from "react";
 import { makeRequest } from "../axios";
 
 // Create the AuthContext
@@ -14,6 +14,7 @@ const AuthContext = createContext({
 export const useAuth = () => useContext(AuthContext);
 
 // AuthProvider Component
+// eslint-disable-next-line react/prop-types
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
   
-
+  
   // Run checkAuthStatus on app load
   useEffect(() => {
     checkAuthStatus();

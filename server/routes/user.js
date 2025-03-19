@@ -2,8 +2,106 @@ const express = require("express");
 const userRoutes = express.Router();
 const User = require("../db/users");
 const Follow = require("../db/follows");
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const { upload } = require("../middlwares/multerMiddlware");
+
+userRoutes.post("/follow", async (req, res) => {
+  const { followerId, followingId } = req.body;
+  // Validate input
+  if (!followerId || !followingId) {
+    return res
+      .status(400)
+      .json({ message: "Both followerId and followingId are required." });
+  }
+
+  if (followerId === followingId) {
+    return res.status(400).json({ message: "You cannot follow yourself." });
+  }
+
+  try {
+    await Follow.create({ followerId, followingId });
+    return res.status(200).json({ message: "Successfully followed the user." });
+  } catch (error) {
+    console.error("Error handling follow:", error);
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while processing the follow request.",
+      });
+  }
+});
+
+userRoutes.post("/unfollow", async (req, res) => {
+  const { followerId, followingId } = req.body;
+   console.log('===============================',followerId,followingId)
+  // Validate input
+  if (!followerId || !followingId) {
+    return res
+      .status(400)
+      .json({ message: "Both followerId and followingId are required." });
+  }
+
+  try {
+    // Check if the follow relationship exists
+    const existingFollow = await Follow.findOne({
+      where: { followerId, followingId },
+    });
+
+    if (!existingFollow) {
+      return res
+        .status(404)
+        .json({ message: "Follow relationship does not exist." });
+    }
+
+    await existingFollow.destroy();
+    return res
+      .status(200)
+      .json({ message: "Successfully unfollowed the user." });
+  } catch (error) {
+    console.error("Error handling unfollow:", error);
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while processing the unfollow request.",
+      });
+  }
+});
+
+userRoutes.get("/:userId/follow", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Get user's followings
+    const followings = await Follow.findAll({
+      where: { followerId: userId },
+      include: [{ model: User, as: "Following", attributes: ["id", "username", "profileImagePath"] }],
+    });
+
+    // Get user's followers
+    const followers = await Follow.findAll({
+      where: { followingId: userId },
+      include: [{ model: User, as: "Follower", attributes: ["id", "username", "profileImagePath"] }],
+    });
+
+    // Extract only required attributes
+    const formattedFollowings = followings.map(f => f.Following);
+    const formattedFollowers = followers.map(f => f.Follower);
+
+    // Get user suggestions (users not followed by the user)
+    const followingIds = formattedFollowings.map(f => f.id);
+    const suggestions = await User.findAll({
+      where: {
+        id: { [Op.notIn]: [userId, ...followingIds] },
+      },
+      attributes: ["id", "username", "profileImagePath"],
+    });
+
+    res.json({ followings: formattedFollowings, followers: formattedFollowers, suggestions });
+  } catch (error) {
+    console.error("Error fetching follow data: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 userRoutes.post("/update/:userId", upload, async (req, res) => {
   const { userId } = req.params;
@@ -45,70 +143,69 @@ userRoutes.post("/update/:userId", upload, async (req, res) => {
 
     // Save the updated user
     await user.save();
-
-    // Return success response
+    const followersCount = await user.countFollowers();
+    const followingCount = await user.countFollowing();
+    // Return success response with followers and following counts
     return res.status(200).json({
       message: "User updated successfully!",
-      user,
+      user: {
+        ...user.dataValues,
+        followersCount,
+        followingCount,
+      },
     });
   } catch (error) {
     console.error("Error updating user:", error);
 
     if (error.name === "SequelizeValidationError") {
-      // Handle validation errors
       return res.status(400).json({ error: "Invalid data provided." });
     }
 
-    // Generic server error
-    return res
-      .status(500)
-      .json({ error: "An error occurred while updating the user." });
+    return res.status(500).json({ error: "An error occurred while updating the user." });
   }
 });
+
 userRoutes.get("/:userId", async (req, res) => {
   const { userId } = req.params;
   const loggedInUserId = req.user?.id;
-  // Validate userId input (optional, if applicable)
+
   if (!userId) {
     return res.status(400).json({ message: "User ID is required" });
   }
   try {
-    // Query the user by userId along with counts for followers and following
     const user = await User.findOne({
       where: { id: userId },
-      attributes: {
-        include: [
-          [
-            Sequelize.fn("COUNT", Sequelize.col("Followers.id")),
-            "followersCount",
-          ],
-          [
-            Sequelize.fn("COUNT", Sequelize.col("Following.id")),
-            "followingCount",
-          ],
+      attributes: [
+        "id",
+        "username",
+        "email",
+        "location",
+        "phoneNumber",
+        "profileImagePath", // Added profile image path
+        "covertureImagePath", // Added coverture image path
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*) 
+            FROM "Follows" 
+            WHERE "Follows"."followingId" = "User"."id"
+          )`), 
+          "followersCount"
         ],
-      },
-      include: [
-        {
-          model: User,
-          as: "Followers", // This is the alias defined in the model for followers
-          attributes: [], // No need to return actual follower data, just the count
-          through: { attributes: [] }, // Don't return anything from the join table
-        },
-        {
-          model: User,
-          as: "Following", // This is the alias defined in the model for following
-          attributes: [], // No need to return actual following data, just the count
-          through: { attributes: [] }, // Don't return anything from the join table
-        },
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*) 
+            FROM "Follows" 
+            WHERE "Follows"."followerId" = "User"."id"
+          )`), 
+          "followingCount"
+        ],
       ],
-      group: ["User.id"], // Group by user ID to get the count of followers and following
     });
-    // If user is not found, return a 404 response
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Check if the logged-in user follows this user
+
     let followed = false;
     if (loggedInUserId) {
       const follow = await Follow.findOne({
@@ -117,10 +214,8 @@ userRoutes.get("/:userId", async (req, res) => {
           followingId: userId,
         },
       });
-      followed = !!follow; // Convert to boolean
+      followed = !!follow;
     }
-
-    // If user is found, return the user data along with counts for followers and following
     return res.status(200).json({
       user: {
         ...user.dataValues,
@@ -130,44 +225,10 @@ userRoutes.get("/:userId", async (req, res) => {
       },
     });
   } catch (error) {
-    // Log the error details for debugging
     console.error("Error while getting user info: ", error);
-
-    // Respond with a 500 Internal Server Error
-    return res
-      .status(500)
-      .json({ message: "An error occurred while fetching user info" });
+    return res.status(500).json({ message: "An error occurred while fetching user info" });
   }
 });
-userRoutes.post("/follow",async(req,res)=>{
-  const {followerId,followingId} = req.body;
-  try {
-     // Check if the follow relationship already exists
-    const existingFollow = await Follow.findOne({
-      where: {
-        followerId: followerId,
-        followingId: followingId,
-      },
-    });
 
-    if (existingFollow) {
-      // If follow relationship exists, unfollow by deleting the record
-      await existingFollow.destroy();
-      return res.status(200).json({ message: "Successfully unfollowed the user." });
-    } else {
-      // If no follow relationship exists, follow the user by creating a new record
-      await Follow.create({
-        followerId: followerId,
-        followingId: followingId,
-      });
-      return res.status(200).json({ message: "Successfully followed the user." });
-    }
-  } catch (error) {
-    console.error("Error handling follow/unfollow:", error);
-    return res.status(500).json({
-      message: "An error occurred while processing the follow request.",
-    });
-  }
-});
 
 module.exports = userRoutes;

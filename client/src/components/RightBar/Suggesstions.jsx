@@ -1,22 +1,37 @@
+/* eslint-disable react/prop-types */
 import { Box, Typography, useTheme } from "@mui/material";
-import React from "react";
 import UserAvatar from "../UserAvatar";
 import CustomButton from "../CustomButton";
 import ScrollableBox from "../ScrollableBox";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1"; // Import suggestion icon
+import { Link } from "react-router-dom";
+import { useSnackBar } from "../../context/SnackBarContext";
+import { useFollow } from "../../context/FollowContext";
 
 function Suggestions() {
   const theme = useTheme();
-
-  // Array of suggestion data
-  const suggestions = [
-    { imgUrl: "/story5.jpeg", username: "berkane rachid" },
-    { imgUrl: "/story3.jpeg", username: "sidali boss" },
-  ];
+  const { setSnackBarParams } = useSnackBar();
+  const { state, followUser } = useFollow();
+  console.log(state.suggestions)
+  const handleFollow = async (suggestionId) => {
+    try {
+      await followUser(suggestionId);
+    } catch (error) {
+      if (error.response) {
+        const { message } = error.response;
+        setSnackBarParams({
+          message: message || "error occured when following a user",
+          open: true,
+          color: "warning",
+        });
+      }
+    }
+  };
 
   return (
     <Box
       width="100%"
-      padding="8px 12px 5px 12px"
+      padding="12px"
       borderRadius="8px"
       sx={{
         backgroundColor: theme.palette.background.paper,
@@ -25,28 +40,78 @@ function Suggestions() {
     >
       <Typography
         variant="body1"
-        sx={{ color: theme.palette.primary.text, marginBottom: "20px" }}
+        sx={{
+          color: theme.palette.primary.text,
+          marginBottom: "20px",
+          fontWeight: "bold",
+        }}
       >
         Suggestions for you
       </Typography>
-     <ScrollableBox maxHeight="100px" scrollAmount={150}>
-      {suggestions.map((suggestion, index) => (
+
+      {state?.suggestions?.length > 0 ? (
+        <ScrollableBox maxHeight="160px" scrollAmount={150}>
+          {state.suggestions.map((suggestion, index) => (
+            <Box
+              key={index}
+              height="40px"
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              marginBottom="8px"
+            >
+              <Link
+                to={`/profile/${suggestion.id}`}
+                style={{ textDecoration: "none" }}
+              >
+                <UserAvatar
+                  imgUrl={suggestion.profileImagePath}
+                  username={suggestion.username}
+                />
+              </Link>
+
+              <Box>
+                <CustomButton
+                  content="Follow"
+                  bgcolor="blue"
+                  handleClick={() => handleFollow(suggestion.id)}
+                />
+                {/* <CustomButton content="Dismiss" bgcolor="red" /> */}
+              </Box>
+            </Box>
+          ))}
+        </ScrollableBox>
+      ) : (
+        // No Suggestions UI
         <Box
-          key={index}
-          height="40px"
           display="flex"
-          justifyContent="space-between"
+          flexDirection="column"
           alignItems="center"
-          marginBottom="8px"
+          justifyContent="center"
+          textAlign="center"
+          padding="20px"
         >
-          <UserAvatar imgUrl={suggestion.imgUrl} username={suggestion.username} />
-          <Box>
-            <CustomButton content="follow" bgcolor="blue" />
-            <CustomButton content="dismiss" bgcolor="red" />
-          </Box>
+          <PersonAddAlt1Icon
+            sx={{
+              fontSize: 50,
+              color: theme.palette.primary.main,
+              marginBottom: "10px",
+            }}
+          />
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.text.secondary }}
+          >
+            No new suggestions at the moment.
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: theme.palette.text.disabled }}
+          >
+            Check back later for new people to follow.
+          </Typography>
         </Box>
-      ))}
-      </ScrollableBox>
+      )}
     </Box>
   );
 }

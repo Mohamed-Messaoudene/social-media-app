@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   Box,
   IconButton,
@@ -7,20 +8,26 @@ import {
   Checkbox,
   FormControlLabel,
   Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import  { useState } from "react";
+import { useState } from "react";
 import {
   FavoriteBorder,
   SmsOutlined,
   Share,
   Favorite,
   Clear,
+  DeleteOutlined,
 } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 import Comments from "./Comments";
 import UserAvatar from "../UserAvatar";
 import { useAuth } from "../../context/AuthContext";
 import { usePosts } from "../../context/PostsContext";
-import PropTypes from "prop-types";
 import { useSnackBar } from "../../context/SnackBarContext";
 import { deletePost } from "../../api/deletePost";
 import { handlePostLike } from "../../api/handlePostLike";
@@ -30,27 +37,40 @@ import { useNavigate } from "react-router";
 function Post({ post }) {
   const [hidden, setHidden] = useState(true);
   const [postComments, setPostComments] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme();
-  const { updatePost,removePost } = usePosts();
+  const { updatePost, removePost } = usePosts();
   const { user } = useAuth();
   const { setSnackBarParams } = useSnackBar();
   const isMe = user.id === post.User.id;
 
   // Delete post handler
   const handleDeletePost = async () => {
+    if (isMe) {
+      setOpenDialog(true); // Show confirmation dialog if the post is mine
+    } else {
+      await deletePost(post.id, isMe, removePost, setSnackBarParams); // Delete immediately if not mine
+    }
+  };
+
+  const confirmDelete = async () => {
+    setOpenDialog(false); // Close dialog before making request
     await deletePost(post.id, isMe, removePost, setSnackBarParams);
   };
-  const handleLikeClick = async() => {
-    await handlePostLike(post.User.id,post.id,updatePost);
+
+  const handleLikeClick = async () => {
+    await handlePostLike(user.id, post.id, updatePost);
   };
 
   const showCommentSection = async () => {
-    await fetchComments(post.id,setPostComments,setSnackBarParams);
+    if (hidden) {
+      await fetchComments(post.id, setPostComments, setSnackBarParams);
+    }
     setHidden((prev) => !prev);
   };
+
   const navigateProfilePage = () => {
-    console.log("Navigating to profile page:", post.User.id); // Debug log
     navigate(`/profile/${post.User.id}`);
   };
 
@@ -77,9 +97,10 @@ function Post({ post }) {
           extraInfo={post.timePassed}
           handleClick={navigateProfilePage}
         />
-        <Tooltip title="delete" placement="bottom">
-          <IconButton aria-label="show more" onClick={handleDeletePost}>
-            <Clear />
+
+        <Tooltip title={isMe ? "delete post" : "hide post"} placement="bottom">
+          <IconButton aria-label="delete post" onClick={handleDeletePost}>
+            {isMe ? <DeleteOutlined /> : <Clear />}
           </IconButton>
         </Tooltip>
       </Box>
@@ -129,28 +150,47 @@ function Post({ post }) {
           share
         </Button>
       </Box>
-      <Box display={hidden ? "none" : "block"}>
-        <Comments postId={post.id} postComments={postComments}  setPostComments={setPostComments}/>
-      </Box>
+      <AnimatePresence>
+        {!hidden && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <Comments
+              postId={post.id}
+              postComments={postComments}
+              setPostComments={setPostComments}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this post?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="primary" sx={{ textTransform: "none" }}>
+            Cancel
+          </Button>
+          <Button onClick={confirmDelete} color="error" sx={{ textTransform: "none" }} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
-
-// Prop Types Validation
-Post.propTypes = {
-  post: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    postText: PropTypes.string.isRequired,
-    postImagePath: PropTypes.string,
-    numberOfLikes: PropTypes.number.isRequired,
-    User: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      profileImagePath: PropTypes.string.isRequired,
-      username: PropTypes.string.isRequired,
-    }).isRequired,
-    timePassed: PropTypes.string.isRequired,
-    liked: PropTypes.bool.isRequired,
-  }).isRequired,
-};
 
 export default Post;

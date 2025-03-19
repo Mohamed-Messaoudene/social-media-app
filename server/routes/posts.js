@@ -43,7 +43,8 @@ postRoutes.get("/", async (req, res) => {
     const formattedPosts = posts.map((post) => {
       const { createdAt, Likes, dataValues } = post;
       const timePassed = moment(createdAt).fromNow();
-      const liked = Array.isArray(Likes) && Likes.some((like) => like.userId === userId);
+      const liked =
+        Array.isArray(Likes) && Likes.some((like) => like.userId === userId);
 
       return {
         ...dataValues,
@@ -52,7 +53,6 @@ postRoutes.get("/", async (req, res) => {
         liked,
       };
     });
-
     res.status(200).json(formattedPosts);
   } catch (error) {
     console.error("Error fetching posts:", error.message, error.stack);
@@ -95,8 +95,8 @@ postRoutes.get("/user/:userId", async (req, res) => {
       ],
     });
 
-     // Format time passed and include it in the response
-     const formattedPosts = userPosts.map((post) => {
+    // Format time passed and include it in the response
+    const formattedPosts = userPosts.map((post) => {
       const { createdAt, Likes, dataValues } = post;
       const timePassed = moment(createdAt).fromNow(); // Use moment to get time difference
       const liked =
@@ -119,7 +119,6 @@ postRoutes.get("/user/:userId", async (req, res) => {
     });
   }
 });
-
 
 // Handle post like
 postRoutes.post("/like", async (req, res) => {
@@ -215,6 +214,8 @@ postRoutes.delete("/:postId", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
+    // First, delete related likes
+    await Like.destroy({ where: { postId } });
     // Delete the post
     await post.destroy();
     // Send success response

@@ -5,23 +5,28 @@ import {
   TextField,
   useTheme,
   Avatar,
+  IconButton,
 } from "@mui/material";
-import  { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   AddPhotoAlternate as AddPhoto,
   Diversity3,
   Send,
 } from "@mui/icons-material";
+import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { useAuth } from "../../context/AuthContext";
 import { useForm } from "react-hook-form";
 import { handleAddPost } from "../../api/addPost";
 import { usePosts } from "../../context/PostsContext";
+import EmojiPicker from "emoji-picker-react";
+import { useSnackBar } from "../../context/SnackBarContext";
 
 function Share() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(""); // For error handling
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null); // Reference for emoji picker
   const theme = useTheme();
   const { user } = useAuth();
   const userId = user.id;
@@ -34,22 +39,47 @@ function Share() {
     handleSubmit,
     formState: { isSubmitting },
   } = useForm();
-  const { addPost } = usePosts();
 
+  const { addPost } = usePosts();
+  const {setSnackBarParams} = useSnackBar();
   const postTextValue = watch("postText", ""); // Default to an empty string
 
+  // Function to handle emoji selection
+  const handleEmojiClick = (emojiObject) => {
+    setValue("postText", postTextValue + emojiObject.emoji); // Append emoji
+  };
+
+  // Close the emoji picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    }
+
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   const handlePostClick = handleSubmit(async (data) => {
-    // Validate that either text or an image is provided
     if (!postTextValue.trim() && !selectedImage) {
-      setErrorMessage("Please write something or add an image."); // Set error message
-      return; // Stop submission if validation fails
+      setErrorMessage("Please write something or add an image.");
+      return;
     }
 
     try {
-      await handleAddPost(userId, data, null, addPost); // No snackbar, handle errors here
+      await handleAddPost(userId, data, setSnackBarParams, addPost);
       reset();
       setSelectedImage(null);
-      setErrorMessage(""); // Clear error message on successful post
+      setErrorMessage("");
     } catch (error) {
       console.error("Error adding post:", error);
     }
@@ -58,10 +88,10 @@ function Share() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (selectedImage) URL.revokeObjectURL(selectedImage); // Clean up previous URL
-      setSelectedImage(URL.createObjectURL(file)); // Generate preview URL
-      setValue("postImage", file); // Set the file in the form state
-      setErrorMessage(""); // Clear error message when an image is selected
+      if (selectedImage) URL.revokeObjectURL(selectedImage);
+      setSelectedImage(URL.createObjectURL(file));
+      setValue("postImage", file);
+      setErrorMessage("");
     }
   };
 
@@ -79,31 +109,28 @@ function Share() {
         padding: "6px 20px",
         margin: "25px 0px 10px 0px",
         boxShadow: "2px 8px 19px -5px rgba(159,162,175,0.5)",
+        position: "relative",
       }}
     >
       <Box width="100%" display="flex" alignItems="center" marginBottom="15px">
         <Avatar
           src={user.profileImagePath}
           alt="Story Image"
-          sx={{
-            width: 30,
-            height: 30,
-            margin: "10px 15px 0 0",
-          }}
+          sx={{ width: 30, height: 30, margin: "10px 15px 0 0" }}
         />
         <TextField
           fullWidth
           multiline
           maxRows={6}
           label={inputLabel}
-          value={postTextValue} // Bind to the `watch` value
+          value={postTextValue}
           onChange={(e) => {
-            setValue("postText", e.target.value); // Update form state on change
-            setErrorMessage(""); // Clear error when user types
+            setValue("postText", e.target.value);
+            setErrorMessage("");
           }}
           variant="standard"
-          error={!!errorMessage} // Display error styling if errorMessage exists
-          helperText={errorMessage} // Display error message
+          error={!!errorMessage}
+          helperText={errorMessage}
           sx={{
             "& .MuiInput-underline:before": { borderBottom: "none" },
             "& .MuiInput-underline:after": { borderBottom: "none" },
@@ -112,8 +139,29 @@ function Share() {
             },
           }}
         />
+
+        {/* Emoji Picker Button */}
+        <IconButton onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+          <InsertEmoticonIcon />
+        </IconButton>
+
+        {/* Emoji Picker - Closes when clicking outside */}
+        {showEmojiPicker && (
+          <Box
+            ref={emojiPickerRef}
+            position="absolute"
+            zIndex={10}
+            top="60px"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </Box>
+        )}
       </Box>
+
       <Divider sx={{ width: "100%", marginBottom: "10px" }} />
+
       {selectedImage && (
         <img
           src={selectedImage}
@@ -122,6 +170,7 @@ function Share() {
           style={{ marginBlock: "15px" }}
         />
       )}
+
       <Box
         width="100%"
         display="flex"
@@ -143,9 +192,9 @@ function Share() {
             Add image
             <input
               type="file"
-              accept="image/*" // Restrict to image files only
+              accept="image/*"
               onChange={handleImageChange}
-              hidden // Hide the default file input
+              hidden
             />
           </Button>
 

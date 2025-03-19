@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Box, useTheme } from "@mui/material";
 import Stories from "../components/home/Stories";
 import Share from "../components/home/Share";
@@ -15,9 +15,10 @@ function HomePage() {
   const allPosts = state.allPosts;
 
   useEffect(() => {
-    console.log("Fetching posts..................");
-     fetchAllPosts(setSnackBarParams,setPosts); // Trigger the fetch function
+    console.log("Fetching posts...");
+    fetchAllPosts(setSnackBarParams,allPosts, setPosts);
   }, []);
+
   
 
   return (

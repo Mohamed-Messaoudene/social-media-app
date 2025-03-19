@@ -1,6 +1,6 @@
 import { makeRequest } from "../axios";
 
-export const fetchAllPosts = async (setSnackBarParams,setPosts) => {
+export const fetchAllPosts = async (setSnackBarParams,allPosts,setPosts) => {
   try {
     const response = await makeRequest.get("/posts/");
     setPosts(response.data);

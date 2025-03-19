@@ -1,9 +1,9 @@
 import { makeRequest } from "../axios";
 
-export const fetchUserData = async (userId, isMe, currentUser) => {
+export const fetchUserData = async (userId, isMe, loggedin_user) => {
   try {
     // Fetch the user's profile data
-    const user = isMe ? currentUser : (await makeRequest.get(`/users/${userId}`)).data.user;
+    const user = isMe ? loggedin_user : (await makeRequest.get(`/users/${userId}`)).data.user;
 
     // Fetch the user's posts
     const postsResponse = await makeRequest.get(`/posts/user/${userId}`);

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   TextField,
@@ -6,7 +5,6 @@ import {
   Typography,
   Divider,
   Tooltip,
-  Container,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { blueGrey } from "@mui/material/colors";
@@ -18,7 +16,7 @@ import {
 } from "@mui/icons-material";
 import SignWithButton from "../components/auth/SignWithButton";
 import SideImage from "../components/auth/SideImage";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import handleLoginSubmit from "../api/login";
 import { useForm } from "react-hook-form";
 import { useSnackBar } from "../context/SnackBarContext";
@@ -34,6 +32,7 @@ function Login() {
   const { setSnackBarParams } = useSnackBar();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const handleGoogleSignIn = () => {
@@ -89,7 +88,8 @@ function Login() {
                   data,
                   login,
                   setSnackBarParams,
-                  navigate
+                  navigate,
+                  location
                 )
               )}
             >

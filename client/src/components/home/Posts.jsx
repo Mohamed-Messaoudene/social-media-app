@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 import Post from "./Post";
+import { SentimentDissatisfied } from "@mui/icons-material";
 
 function Posts({allPosts}) {
   return (
@@ -16,10 +17,33 @@ function Posts({allPosts}) {
            <Post key={post.id} post={post}/>
         ))
       ) : (
-        <Typography variant="body1" color="textSecondary">
-          No posts available.
-        </Typography>
-      )}
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            gap={2}
+            sx={{ marginTop: 4 }}
+        >
+            <SentimentDissatisfied
+                sx={{ fontSize: 60, color: "text.secondary" }}
+            />
+            <Typography
+                variant="h6"
+                color="textSecondary"
+                align="center"
+            >
+                No posts available.
+            </Typography>
+            <Typography
+                variant="body2"
+                color="textSecondary"
+                align="center"
+            >
+                write your first post !!!
+            </Typography>
+        </Box>
+    )}
     </Box>
   );
 }

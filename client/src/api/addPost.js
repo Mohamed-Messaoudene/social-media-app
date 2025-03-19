@@ -16,6 +16,7 @@ export const handleAddPost = async (
     });
 
     if (response.status === 201) {
+      console.log(response.data);
       const { message, post } = response.data;
       setSnackBarParams({
         message: message || "Post added successfully!",

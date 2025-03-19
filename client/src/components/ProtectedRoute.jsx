@@ -1,29 +1,32 @@
-import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Navbar from "./navbar/Navbar";
+import { Grid } from "@mui/material";
 import Leftbar from "./Leftbar";
 import Rightbar from "./RightBar/Rightbar";
-import { Grid2 as Grid } from "@mui/material";
 
 function ProtectedRoute() {
-  const { user } = useAuth(); // get the authentication status
-  const isAuthenticated = !!user;
+  const { user, loading } = useAuth();
+  const location = useLocation(); // Get current URL path
 
-  return isAuthenticated ? (
-    <Grid container  width="100%"  >
-      <Grid item size={2} >
+  // Wait for auth check to complete before rendering anything
+  if (loading) {
+    return null; // Or add a loading spinner here
+  }
+
+  return user ? (
+    <Grid container width="100%">
+      <Grid item xs={2}>
         <Leftbar />
       </Grid>
-      <Grid item size={7}>
+      <Grid item xs={7}>
         <Outlet />
       </Grid>
-      <Grid item size={3}>
+      <Grid item xs={3}>
         <Rightbar />
       </Grid>
     </Grid>
   ) : (
-    <Navigate to="/login" replace />
+    <Navigate to="/login" replace state={{ from: location.pathname }} />
   );
 }
 

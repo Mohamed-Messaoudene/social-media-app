@@ -36,7 +36,8 @@ function ImageInput({ name,setValue,initialImagePath}) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        border: "1px dashed black",
+        border: "1px dashed ",
+        borderColor:theme.palette.primary.text,
         position: "relative",
       }}
     >

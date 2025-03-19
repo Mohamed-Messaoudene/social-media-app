@@ -27,19 +27,23 @@ const defineAssociations = function () {
   User.hasMany(Like, { foreignKey: "userId" });
 
   Like.belongsTo(Post, { foreignKey: "postId" });
-  Post.hasMany(Like, { foreignKey: "postId" });
+  Post.hasMany(Like, { foreignKey: "postId", onDelete: "CASCADE" });
 
   // User-Follow relationship (many-to-many self-referencing association)
   User.belongsToMany(User, {
     through: Follow,
     as: "Followers", // Users following this user
     foreignKey: "followingId",
+    otherKey: "followerId",
   });
   User.belongsToMany(User, {
     through: Follow,
     as: "Following", // Users this user follows
     foreignKey: "followerId",
+    otherKey: "followingId",
   });
+  Follow.belongsTo(User, { foreignKey: "followerId", as: "Follower" });
+  Follow.belongsTo(User, { foreignKey: "followingId", as: "Following" });
 };
 
 module.exports = defineAssociations;
