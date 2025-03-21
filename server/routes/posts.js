@@ -7,6 +7,7 @@ const sequelize = require("../db/index");
 const { Op, Sequelize } = require("sequelize");
 const moment = require("moment");
 const { upload } = require("../middlwares/multerMiddlware");
+const server_url = process.env.SERVER_URL;
 
 // Get all posts
 postRoutes.get("/", async (req, res) => {
@@ -154,7 +155,7 @@ postRoutes.post("/:userId", upload, async (req, res) => {
   const { postText } = req.body;
   const postImagePath = req.files?.postImage?.[0]?.path || null;
   const normalizedPostImagePath = postImagePath
-    ? `http://localhost:5000/${postImagePath.replace(/\\/g, "/")}`
+    ? `${server_url}/${postImagePath.replace(/\\/g, "/")}`
     : null;
 
   try {

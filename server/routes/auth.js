@@ -4,7 +4,7 @@ const User = require("../db/users");
 const passport = require("passport");
 const { UniqueConstraintError } = require("sequelize");
 const { upload } = require("../middlwares/multerMiddlware");
-
+const server_url = process.env.SERVER_URL;
 // Check authentication status
 authRoutes.get("/checkAuth", async (req, res) => {
   if (req.isAuthenticated()) {
@@ -89,10 +89,10 @@ authRoutes.post("/register", upload, async (req, res) => {
   const covertureImagePath = req.files?.covertureImage?.[0]?.path || null;
   // Normalize the file paths
   const normalizedProfileImagePath = profileImagePath
-    ? `http://localhost:5000/${profileImagePath.replace(/\\/g, "/")}`
+    ? `${server_url}/${profileImagePath.replace(/\\/g, "/")}`
     : null;
   const normalizedCovertureImagePath = covertureImagePath
-    ? `http://localhost:5000/${covertureImagePath.replace(/\\/g, "/")}`
+    ? `${server_url}/${covertureImagePath.replace(/\\/g, "/")}`
     : null;
 
   try {

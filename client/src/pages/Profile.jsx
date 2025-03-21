@@ -79,6 +79,7 @@ function Profile() {
       });
     }
   };
+  console.log(profileUser)
 
   if (loading) return <div>Loading...</div>;
   return (

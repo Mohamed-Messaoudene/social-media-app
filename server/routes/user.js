@@ -4,6 +4,8 @@ const User = require("../db/users");
 const Follow = require("../db/follows");
 const { Sequelize, Op } = require("sequelize");
 const { upload } = require("../middlwares/multerMiddlware");
+const server_url = process.env.SERVER_URL;
+
 
 userRoutes.post("/follow", async (req, res) => {
   const { followerId, followingId } = req.body;
@@ -113,10 +115,10 @@ userRoutes.post("/update/:userId", upload, async (req, res) => {
 
   // Normalize the file paths
   const normalizedProfileImagePath = profileImagePath
-    ? `http://localhost:5000/${profileImagePath.replace(/\\/g, "/")}`
+    ? `${server_url}/${profileImagePath.replace(/\\/g, "/")}`
     : null;
   const normalizedCovertureImagePath = covertureImagePath
-    ? `http://localhost:5000/${covertureImagePath.replace(/\\/g, "/")}`
+    ? `${server_url}/${covertureImagePath.replace(/\\/g, "/")}`
     : null;
 
   try {
