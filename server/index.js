@@ -17,7 +17,7 @@ require("./config/passport-local-setup");
 
 const client_url = process.env.CLIENT_URL;
 const corsOptions={
-    origin: client_url, // Replace with your frontend's URL
+    origin: [client_url], // Replace with your frontend's URL
     credentials: true, // This allows cookies to be sent with the request
     allowedHeaders: "Content-Type, Authorization", // Add headers you need
 };
