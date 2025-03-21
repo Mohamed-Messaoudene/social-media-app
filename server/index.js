@@ -13,7 +13,6 @@ const commentRoutes = require("./routes/comments");
 const app = express();
 
 require("./config/passport-local-setup");
-require("./config/passport-google-setup");
 
 const corsOptions={
     origin: "http://localhost:5173", // Replace with your frontend's URL

@@ -126,22 +126,6 @@ authRoutes.post("/register", upload, async (req, res) => {
   }
 });
 
-// Google OAuth routes
-authRoutes.get(
-  "/google",
-  passport.authenticate("google", { scope: ["email", "profile"] })
-);
-
-authRoutes.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "http://localhost:5173/failed",
-  }),
-  (req, res) => {
-    res.status(200).redirect("http://localhost:5173/resource");
-  }
-);
-
 // Logout route
 authRoutes.post("/logout", (req, res) => {
   req.logout((err) => {
