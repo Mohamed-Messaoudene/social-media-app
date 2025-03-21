@@ -5,7 +5,6 @@ const defineAssociations = require("./db/relations");
 const authRoutes = require("./routes/auth");
 const passport = require("passport");
 const sessionMiddlware = require("./middlwares/sessionMiddlware");
-const verifyIfAuthentificated = require("./middlwares/verifyIfAuthenticated");
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/posts");
 const commentRoutes = require("./routes/comments");
@@ -43,10 +42,9 @@ app.use("/api/users",userRoutes);
 app.use("/api/posts",postRoutes);
 app.use("/api/comments",commentRoutes);    
 
-// app.use("/api/story",storyRoutes);  
 
 
-
-app.listen(5000,()=>{
-    console.log("the server is lestening on the port 5000")
+const port = process.env.PORT || 5000;
+app.listen(port,()=>{
+    console.log("the server is lestening on the port :",port)
 })
