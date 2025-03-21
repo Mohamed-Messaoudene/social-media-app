@@ -1,4 +1,4 @@
-import makeRequest from "../axios";
+import {makeRequest} from "../axios";
 
 const handleRegisterSubmit = async (data, setSnackBarParams, navigate) => {
   try {
