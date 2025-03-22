@@ -42,6 +42,7 @@ function App() {
 
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute />}>
+            <Route index element={<Home />} />
             <Route path="home" element={<Home />} />
             <Route path="profile/:userId" element={<Profile />} />
           </Route>

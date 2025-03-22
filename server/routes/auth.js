@@ -106,8 +106,8 @@ authRoutes.post("/register", upload, async (req, res) => {
       phoneNumber,
     });
     // Convert the user instance to JSON and delete the password
-    const userWithoutPassword = newUser.toJSON();
-    delete userWithoutPassword.password;
+    const { password, ...userWithoutPassword } = newUser.get({ plain: true });
+
 
     return res.status(201).json({
       message: "User registered successfully!",

@@ -9,7 +9,10 @@ const password = process.env.PASSWORD;
 const sequelize = new Sequelize(db_name, username, password, {
   host: host_name, 
   dialect: "postgres",
-});
+  logging: false,
+  dialectOptions: process.env.NODE_ENV === "production"
+    ? { ssl: { require: true, rejectUnauthorized: false } } // Ensure SSL is required
+    : {},});
 // Test the connection
 sequelize
   .authenticate()

@@ -3,15 +3,13 @@ const LocalStrategy = require("passport-local").Strategy;
 const User = require("../db/users");
 
 passport.use(
-  new LocalStrategy({ usernameField: "email" }, async function (
-    email,
-    password,
-    done
-  ) {
-    console.log("rani flocal passport");
+  new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
+    console.log("🔹 Passport LocalStrategy initialized");
+
     try {
-      // Explicitly include password in query to compare
+      // Find user and include password for comparison
       const user = await User.scope("withPassword").findOne({ where: { email } });
+
       if (!user) {
         return done(null, false, { message: "User not found" });
       }
@@ -22,33 +20,32 @@ passport.use(
         return done(null, false, { message: "Invalid password" });
       }
 
-      // Remove password before returning the user
-      const userWithoutPassword = { ...user.toJSON() };
+      // Convert Sequelize instance to plain object and remove password
+      const userWithoutPassword = user.get({ plain: true });
       delete userWithoutPassword.password;
+
       return done(null, userWithoutPassword);
     } catch (error) {
-      console.log("this error is from passport local login", error);
+      console.error("❌ Error in Passport LocalStrategy:", error);
       return done(error);
     }
   })
 );
 
-// Serialize user (only store the user ID in the session)
+// Serialize user (store user ID in session)
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Deserialize user (fetch user from the database and exclude the password)
+// Deserialize user (fetch user without password)
 passport.deserializeUser(async (userId, done) => {
   try {
-    // Fetch the user without the password field
-    const myUser = await User.findOne({
-      where: { id: userId },
-      attributes: { exclude: ["password"] }, // Exclude password explicitly
+    const myUser = await User.findByPk(userId, {
+      attributes: { exclude: ["password"] },
     });
 
     if (!myUser) {
-      return done(new Error("User not found"));
+      return done(null, false);
     }
 
     done(null, myUser);
