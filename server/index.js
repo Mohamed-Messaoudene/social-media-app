@@ -8,6 +8,8 @@ const sessionMiddleware = require("./middlwares/sessionMiddlware"); // Fixed fol
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/posts");
 const commentRoutes = require("./routes/comments");
+const uploadRoutes = require("./routes/upload");
+
 const verifyIfAuthenticated = require("./middlwares/verifyIfAuthenticated"); // Fixed folder name
 require("dotenv").config();
 
@@ -35,8 +37,6 @@ app.use(sessionMiddleware);  // Fixed variable name
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serve static files from the 'uploads' folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Test route for debugging session
 app.get("/", (req, res) => {
@@ -45,6 +45,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
+app.use("/api/upload", uploadRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", verifyIfAuthenticated, userRoutes);
 app.use("/api/posts", verifyIfAuthenticated, postRoutes);

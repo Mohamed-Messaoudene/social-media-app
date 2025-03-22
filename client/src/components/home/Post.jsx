@@ -110,7 +110,7 @@ function Post({ post }) {
           color={theme.palette.primary.text}
           padding="10px 0px 10px 10px"
         >
-          {post.postText}
+          {post.postText == "undefined" ? "" : post.postText}
         </Typography>
         {post.postImagePath && (
           <img
@@ -181,10 +181,19 @@ function Post({ post }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} color="primary" sx={{ textTransform: "none" }}>
+          <Button
+            onClick={() => setOpenDialog(false)}
+            color="primary"
+            sx={{ textTransform: "none" }}
+          >
             Cancel
           </Button>
-          <Button onClick={confirmDelete} color="error" sx={{ textTransform: "none" }} autoFocus>
+          <Button
+            onClick={confirmDelete}
+            color="error"
+            sx={{ textTransform: "none" }}
+            autoFocus
+          >
             Delete
           </Button>
         </DialogActions>

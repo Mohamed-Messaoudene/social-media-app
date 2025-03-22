@@ -150,80 +150,98 @@ postRoutes.post("/like", async (req, res) => {
 });
 
 // Add a post
-postRoutes.post("/:userId", upload, async (req, res) => {
-  const { userId } = req.params;
-  const { postText } = req.body;
-  const postImagePath = req.files?.postImage?.[0]?.path || null;
-  const normalizedPostImagePath = postImagePath
-    ? `${server_url}/${postImagePath.replace(/\\/g, "/")}`
-    : null;
+postRoutes.post(
+  "/:userId",
+  upload.fields([{ name: "postImage", maxCount: 1 }]),
+  async (req, res) => {
+    const { userId } = req.params;
+    const { postText } = req.body;
+    let postImagePath = null;
+    if (req.files?.postImage) {
+      postImagePath = req.files.postImage[0].path;
+    }
+    try {
+      // Create the post
+      const newPost = await Post.create({
+        postText,
+        postImagePath,
+        userId,
+      });
 
-  try {
-    // Create the post
-    const newPost = await Post.create({
-      postText,
-      postImagePath: normalizedPostImagePath,
-      userId,
-    });
+      // Fetch the post with associated user
+      const createdPost = await Post.findOne({
+        where: { id: newPost.id },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "username", "profileImagePath"], // Include user details
+          },
+        ],
+      });
 
-    // Fetch the post with associated user
-    const createdPost = await Post.findOne({
-      where: { id: newPost.id },
-      include: [
-        {
-          model: User,
-          attributes: ["id", "username", "profileImagePath"], // Include user details
-        },
-      ],
-    });
+      // Calculate the time passed using moment
+      const timePassed = moment(createdPost.createdAt).fromNow();
 
-    // Calculate the time passed using moment
-    const timePassed = moment(createdPost.createdAt).fromNow();
+      // Construct the response
+      const responsePost = {
+        ...createdPost.toJSON(), // Convert Sequelize instance to plain object
+        timePassed, // Add the time passed field
+        numberOfLikes: 0, // Add numberOfLikes as 0
+      };
 
-    // Construct the response
-    const responsePost = {
-      ...createdPost.toJSON(), // Convert Sequelize instance to plain object
-      timePassed, // Add the time passed field
-      numberOfLikes: 0, // Add numberOfLikes as 0
-    };
-
-    return res.status(201).json({
-      message: "Post added successfully!",
-      post: responsePost,
-    });
-  } catch (error) {
-    console.error("Error adding post:", error);
-    return res.status(500).json({
-      message: "An error occurred while adding the post.",
-    });
+      return res.status(201).json({
+        message: "Post added successfully!",
+        post: responsePost,
+      });
+    } catch (error) {
+      console.error("Error adding post:", error);
+      return res.status(500).json({
+        message: "An error occurred while adding the post.",
+      });
+    }
   }
-});
+);
 
-// Update a post
-postRoutes.put("/:postId", (req, res) => {
-  const { postId } = req.params;
-  // Add logic for updating a post
-});
-
+// Delete a post by its postId
 // Delete a post by its postId
 postRoutes.delete("/:postId", async (req, res) => {
   const { postId } = req.params;
+
   try {
-    // Find the post by ID
-    console.log("I am there don't arrow");
+    // ✅ Find the post by ID
     const post = await Post.findOne({ where: { id: postId } });
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
-    // First, delete related likes
+
+    // ✅ Delete the post image from Cloudinary if it exists
+    if (post.postImagePath) {
+      // Extract the public ID from the Cloudinary URL
+      const publicId = post.postImagePath.split("/").pop().split(".")[0];
+
+      // Delete the image from Cloudinary
+      await cloudinary.uploader.destroy(publicId, (error, result) => {
+        if (error) {
+          console.error("Error deleting image from Cloudinary:", error);
+        } else {
+          console.log("Cloudinary image deleted:", result);
+        }
+      });
+    }
+
+    // ✅ Delete related likes first
     await Like.destroy({ where: { postId } });
-    // Delete the post
+
+    // ✅ Now delete the post from the database
     await post.destroy();
-    // Send success response
-    res.status(200).json({ message: "Post deleted successfully" });
+
+    // ✅ Send success response
+    return res
+      .status(200)
+      .json({ message: "Post and image deleted successfully!" });
   } catch (error) {
     console.error(error);
-    res
+    return res
       .status(500)
       .json({ message: "Failed to delete post", error: error.message });
   }

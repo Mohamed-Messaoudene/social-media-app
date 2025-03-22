@@ -4,7 +4,7 @@ const User = require("../db/users");
 const passport = require("passport");
 const { UniqueConstraintError } = require("sequelize");
 const { upload } = require("../middlwares/multerMiddlware");
-const server_url = process.env.SERVER_URL;
+
 // Check authentication status
 authRoutes.get("/checkAuth", async (req, res) => {
   if (req.isAuthenticated()) {
@@ -42,8 +42,6 @@ authRoutes.post("/login", (req, res, next) => {
           "Login failed. Please check your username and password and try again.",
       });
     }
-    console.log(user);
-    console.log("User methods:", Object.keys(user.__proto__));
     req.logIn(user, async (err) => {
       if (err) {
         console.log("there is error in req.login :", err);
@@ -81,50 +79,62 @@ authRoutes.post("/login", (req, res, next) => {
 });
 
 // Register route
-authRoutes.post("/register", upload, async (req, res) => {
-  const { username, email, password, location, phoneNumber } = req.body;
+authRoutes.post(
+  "/register",
+  upload.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "covertureImage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { username, email, password, location, phoneNumber } = req.body;
 
-  // Get file paths from Multer's `req.files`
-  const profileImagePath = req.files?.profileImage?.[0]?.path || null;
-  const covertureImagePath = req.files?.covertureImage?.[0]?.path || null;
-  // Normalize the file paths
-  const normalizedProfileImagePath = profileImagePath
-    ? `${server_url}/${profileImagePath.replace(/\\/g, "/")}`
-    : null;
-  const normalizedCovertureImagePath = covertureImagePath
-    ? `${server_url}/${covertureImagePath.replace(/\\/g, "/")}`
-    : null;
+    try {
+      let profileImagePath = null;
+      let covertureImagePath = null;
 
-  try {
-    const newUser = await User.create({
-      username,
-      email,
-      password, // No need to hash here; Sequelize hooks handle this
-      profileImagePath: normalizedProfileImagePath,
-      covertureImagePath: normalizedCovertureImagePath,
-      location,
-      phoneNumber,
-    });
-    // Convert the user instance to JSON and delete the password
-    const { password, ...userWithoutPassword } = newUser.get({ plain: true });
+      // ✅ Extract Cloudinary image URLs if files exist
+      if (req.files?.profileImage) {
+        profileImagePath = req.files.profileImage[0].path; // Cloudinary URL
+      }
+      if (req.files?.covertureImage) {
+        covertureImagePath = req.files.covertureImage[0].path; // Cloudinary URL
+      }
 
+      // ✅ Create the new user in the database
+      const newUser = await User.create({
+        username,
+        email,
+        password, // Sequelize hooks handle password hashing
+        profileImagePath,
+        covertureImagePath,
+        location,
+        phoneNumber,
+      });
 
-    return res.status(201).json({
-      message: "User registered successfully!",
-      user: userWithoutPassword,
-    });
-  } catch (error) {
-    if (error instanceof UniqueConstraintError) {
-      res
-        .status(409)
-        .json({ message: "Error: this user email already exists!" });
-    } else {
-      res
-        .status(500)
-        .json({ message: "ERROR: An error occurred during registration!" });
+      // ✅ Remove password before sending response
+      const { password: _, ...userWithoutPassword } = newUser.get({
+        plain: true,
+      });
+
+      return res.status(201).json({
+        message: "User registered successfully!",
+        user: userWithoutPassword,
+      });
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        return res
+          .status(409)
+          .json({ message: "Error: this email already exists!" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "ERROR: An error occurred during registration!" });
+      }
     }
   }
-});
+);
+
+module.exports = authRoutes;
 
 // Logout route
 authRoutes.post("/logout", (req, res) => {

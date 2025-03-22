@@ -2,15 +2,22 @@ import { makeRequest } from "../axios";
 
 export const fetchUserData = async (userId, isMe, loggedin_user) => {
   try {
-    // Fetch the user's profile data
-    const user = isMe ? loggedin_user : (await makeRequest.get(`/users/${userId}`)).data.user;
+    // Fetch user data & posts concurrently
+    const [userResponse, postsResponse] = await Promise.all([
+      isMe ? Promise.resolve({ data: { user: loggedin_user } }) : makeRequest.get(`/users/${userId}`),
+      makeRequest.get(`/posts/user/${userId}`)
+    ]);
 
-    // Fetch the user's posts
-    const postsResponse = await makeRequest.get(`/posts/user/${userId}`);
+    const user = userResponse.data.user;
     const posts = postsResponse.data;
-
+    console.log(user)
+    // Assign default images if missing
     return {
-      user,
+      user: {
+        ...user,
+        profileImagePath: user.profileImagePath || "/emptyProfileImage.png",
+        covertureImagePath: user.covertureImagePath || "/emptyCoverture.png",
+      },
       posts,
     };
   } catch (error) {

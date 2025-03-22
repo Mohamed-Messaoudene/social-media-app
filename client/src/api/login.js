@@ -14,9 +14,14 @@ const handleLoginSubmit = async (data,login, setSnackBarParams, navigate,locatio
         open: true,
         color: "success",
       });
-      console.log(response.data.user)
+      // Set default images if profileImagePath or covertureImagePath is null
+      const updatedUser = {
+        ...response.data.user,
+        profileImagePath: response.data.user.profileImagePath || "/emptyProfileImage.png",
+        covertureImagePath: response.data.user.covertureImagePath || "/emptyCoverture.png",
+      };
      
-      login(response.data.user);
+      login(updatedUser);
       navigate(location.state?.from || "/home", { replace: true });
     }
   } catch (error) {
