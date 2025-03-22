@@ -18,8 +18,7 @@ const sessionMiddleware = session({
   cookie: {
     secure: process.env.NODE_ENV == "production", // Secure in production only
     httpOnly: true,
-    sameSite: "none", 
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    sameSite: "None",    maxAge: 1000 * 60 * 60 * 24, // 1 day
   },
 });
 

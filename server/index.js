@@ -12,7 +12,8 @@ const verifyIfAuthenticated = require("./middlwares/verifyIfAuthenticated"); // 
 require("dotenv").config();
 
 const app = express();
-
+// ✅ Trust Render's proxy
+app.set("trust proxy", 1); 
 // Load Passport configuration before using it
 require("./config/passport-local-setup");
 
