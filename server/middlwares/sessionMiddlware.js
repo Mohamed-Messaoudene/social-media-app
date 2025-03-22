@@ -1,7 +1,7 @@
 const session = require("express-session");
 const SequelizeStore =  require("connect-session-sequelize")(session.Store);
 const sequelize = require("../db/index");
-
+const secure = process.env.SECURE;
 const sessionMiddleware = session({
     secret: process.env.SESSION_SECRET_KEY,
     resave: false, // Avoid resaving session if nothing is changed
@@ -11,6 +11,7 @@ const sessionMiddleware = session({
       tableName: 'Sessions', // Customize table name if needed
     }),
     cookie: {
+      secure:secure||true,
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, // 1 day, adjust as needed
     },

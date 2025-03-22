@@ -8,6 +8,7 @@ const sessionMiddlware = require("./middlwares/sessionMiddlware");
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/posts");
 const commentRoutes = require("./routes/comments");
+const verifyIfAuthentificated = require("./middlwares/verifyIfAuthenticated");
 require("dotenv").config();
 
 const app = express();
@@ -38,9 +39,9 @@ app.get("/",(req,res)=>{
 })
 
 app.use("/api/auth",authRoutes);   
-app.use("/api/users",userRoutes);    
-app.use("/api/posts",postRoutes);
-app.use("/api/comments",commentRoutes);    
+app.use("/api/users",verifyIfAuthentificated,userRoutes);    
+app.use("/api/posts",verifyIfAuthentificated,postRoutes);
+app.use("/api/comments",verifyIfAuthentificated,commentRoutes);    
 
 
 
