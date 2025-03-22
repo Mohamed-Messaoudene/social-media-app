@@ -16,9 +16,9 @@ const sessionMiddleware = session({
   saveUninitialized: false, // Don't save uninitialized sessions
   store: sessionStore,
   cookie: {
-    secure: process.env.NODE_ENV === "production", // Secure in production only
+    secure: process.env.NODE_ENV == "production", // Secure in production only
     httpOnly: true,
-    sameSite: "lax", // Protect against CSRF attacks
+    sameSite: "none", 
     maxAge: 1000 * 60 * 60 * 24, // 1 day
   },
 });
