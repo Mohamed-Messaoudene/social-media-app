@@ -4,6 +4,10 @@
 ![social media app design](https://github.com/user-attachments/assets/4e46b0e2-fadf-417f-9641-caa64af5190a)
 
 ---
+## 🌟 Live Demo  
+Experience the app in action: [**Live Demo**](https://social-media-j5ch.onrender.com)  
+
+---
 
 ## 🚀 Features  
 - ✅ User Authentication (Register/Login)  
@@ -44,12 +48,34 @@ cd social-media-app
 cd server
 npm install
 ```
-Create a .env file and configure database credentials.
+Create a .env file in the server folder  and configure database credentials also other keys.
+```
+DATABASE_NAME = 
+USER_NAME = 
+PASSWORD =
+HOST_NAME=
+
+SESSION_SECRET_KEY = 
+CLIENT_URL='http://localhost:5173 (default value)
+SERVER_URL='http://localhost:5000' (default value)
+PORT= 5000  (default value)
+NODE_ENV='development'
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+```
 
 ### **3️⃣ Install Frontend Dependencies**  
 ```sh
 cd ../client
 npm install
+```
+Create a .env file in the client folder.
+
+```
+VITE_SERVER_URL="http://localhost:5000" (default value)
 ```
 ### **4️⃣  Start the Application**
 #### *🚀 Start Backend (Node.js & Express.js)*
