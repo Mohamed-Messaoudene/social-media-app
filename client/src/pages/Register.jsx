@@ -46,7 +46,7 @@ function Register() {
             alignItems:'center'
           }}
         >
-          <SideImage url="/signup.png" alt="sign up image" />
+          <SideImage url="/20602853_6300958.svg" alt="sign up image" />
           <Box
             display="flex"
             flexDirection="column"

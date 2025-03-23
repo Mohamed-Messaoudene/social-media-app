@@ -65,7 +65,6 @@ function Login() {
           sx={{
             width: "70%",
             height: "80%",
-            backgroundColor: "white",
             display: "flex",
           }}
         >
